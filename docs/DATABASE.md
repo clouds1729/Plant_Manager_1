@@ -1,3 +1,8 @@
+Use Supabase Row Level Security.
+
+Users should only access data from organizations where they are members.
+
+Supplier users should only access supplier-specific data.
 ## `docs/DATABASE.md`
 
 ```md
