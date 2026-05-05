@@ -1,264 +1,99 @@
-## `docs/DATABASE.md`
+# Roadmap
 
-```md
-# Database Design
+## Phase 1 — Core SaaS Foundation
 
-## Core Tables
+Build the basic application foundation:
 
-### organizations
+- Next.js app
+- Supabase setup
+- Auth
+- Organizations
+- Projects
+- Suppliers
+- Plants
+- Daily logs
+- Basic dashboard
+- Calculation utilities
+- Unit tests
+- Seed data
 
-Represents a company using the platform.
+Success condition:
 
-Fields:
+A user can create a project, supplier, plant, and daily log. The app correctly calculates gross and billable hours.
 
-- id
-- name
-- country
-- currency
-- logo_url
-- created_at
-- updated_at
+## Phase 2 — Rates and IPC Generation
 
-### users
+Build payment foundation:
 
-Supabase Auth manages users.
+- Rate history
+- Effective-date rate lookup
+- IPC period creation
+- Selected plants per IPC
+- IPC preview
+- IPC finalization
+- Stored IPC line items
+- Tax configuration
 
-Application-specific user data can be stored in profiles if needed.
+Success condition:
 
-### organization_members
+A user can generate an IPC for a supplier and selected plants over a period, with correct totals.
 
-Links users to organizations.
+## Phase 3 — Excel Import
 
-Fields:
+Build Excel workflow:
 
-- id
-- organization_id
-- user_id
-- role
-- status
-- created_at
+- Upload Excel
+- Parse rows
+- Normalize fields
+- Match plants
+- Detect conflicts
+- Review staging table
+- Commit selected rows
 
-Roles:
+Success condition:
 
-- owner
-- admin
-- project_manager
-- finance
-- foreman
-- viewer
-- supplier_viewer
+A user can import an Excel timesheet without overwriting existing logs silently.
 
-### projects
+## Phase 4 — AI Scan Import
 
-Fields:
+Build scan workflow:
 
-- id
-- organization_id
-- name
-- location
-- client_name
-- contractor_name
-- start_date
-- end_date
-- status
-- created_at
-- updated_at
+- Upload timesheet photo
+- Server-side AI extraction
+- Staging review
+- Conflict detection
+- Commit reviewed rows
 
-### suppliers
+Success condition:
 
-Fields:
+A scanned timesheet can produce reviewed plant logs without exposing API keys.
 
-- id
-- organization_id
-- name
-- contact_name
-- phone
-- email
-- tax_id
-- address
-- created_at
-- updated_at
+## Phase 5 — Approvals, Audit Logs, Permissions
 
-### plants
+Build commercial safety:
 
-Fields:
+- Log approval workflow
+- IPC approval workflow
+- Audit logs
+- Role-based permissions
+- Supabase RLS policies
 
-- id
-- organization_id
-- project_id
-- supplier_id
-- type
-- registration_number
-- category
-- photo_url
-- contract_start
-- contract_end
-- status
-- created_at
-- updated_at
+Success condition:
 
-### plant_logs
+Users can only perform actions allowed by their role, and payment-sensitive changes are auditable.
 
-Fields:
+## Phase 6 — Reporting and Supplier Portal
 
-- id
-- organization_id
-- project_id
-- plant_id
-- date
-- start_time
-- end_time
-- lunch_hours
-- unproductive_hours
-- unproductive_type
-- breakdown_hours
-- billable_hours
-- remarks
-- source
-- approval_status
-- created_by
-- approved_by
-- approved_at
-- created_at
-- updated_at
+Build commercial polish:
 
-Possible sources:
+- Supplier portal
+- PDF reports
+- Utilization reports
+- Breakdown reports
+- Unproductive-hours reports
+- Mobile optimization
+- Optional offline/PWA support
 
-- manual
-- excel
-- scan
-- correction
+Success condition:
 
-Approval statuses:
-
-- draft
-- submitted
-- approved
-- locked
-
-### plant_rates
-
-Fields:
-
-- id
-- organization_id
-- supplier_id
-- plant_id
-- rate
-- unit
-- effective_from
-- effective_to
-- note
-- created_by
-- created_at
-
-Units:
-
-- hour
-- day
-- month
-- fixed
-
-### ipc_periods
-
-Fields:
-
-- id
-- organization_id
-- project_id
-- supplier_id
-- period_start
-- period_end
-- ipc_number
-- status
-- subtotal
-- tax_total
-- total
-- created_by
-- approved_by
-- approved_at
-- created_at
-
-Statuses:
-
-- draft
-- submitted
-- approved
-- paid
-- void
-
-### ipc_period_plants
-
-Fields:
-
-- id
-- ipc_period_id
-- plant_id
-
-### ipc_lines
-
-Fields:
-
-- id
-- ipc_period_id
-- plant_id
-- hours
-- rate
-- subtotal
-- tax_amount
-- total
-
-### imports
-
-Fields:
-
-- id
-- organization_id
-- project_id
-- source_type
-- file_url
-- status
-- created_by
-- created_at
-
-Source types:
-
-- excel
-- scan
-
-Statuses:
-
-- uploaded
-- parsed
-- reviewed
-- committed
-- cancelled
-
-### import_rows
-
-Fields:
-
-- id
-- import_id
-- plant_match_id
-- raw_data
-- parsed_data
-- validation_status
-- conflict_status
-- resolution_action
-- committed_log_id
-- created_at
-
-### audit_logs
-
-Fields:
-
-- id
-- organization_id
-- actor_id
-- entity_type
-- entity_id
-- action
-- before_json
-- after_json
-- created_at
+The platform is usable by both construction company staff and supplier users.
