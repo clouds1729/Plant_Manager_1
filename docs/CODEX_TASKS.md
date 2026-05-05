@@ -1,3 +1,9 @@
+The target deployment path is:
+
+Frontend: Vercel
+Backend/database/storage/auth: Supabase
+
+Deployment setup should be documented, but Codex should not assume external accounts are already configured.
 ## `docs/CODEX_TASKS.md`
 
 This is the most important one for Codex.
