@@ -71,3 +71,19 @@
 - Business CRUD and import pages now rely on authenticated membership context for `organization_id` during inserts.
 - Local manual testing must use a signed-in Supabase user that has an `organization_members` row in the target organization.
 - Unauthenticated or non-member sessions should expect empty reads and rejected writes by RLS.
+
+## Admin membership management (Phase 5)
+- Added protected `/settings/members` route for organization membership administration.
+- Page now shows current user org context (`organization_id`, role) and enforces read-only admin-required state for non `owner/admin` roles.
+- `owner/admin` can list members and perform add/update/remove via database RPCs.
+- Membership RPCs enforce:
+  - authenticated actor (`auth.uid()` required)
+  - actor must be `owner/admin` within target org
+  - role validation against supported roles (`owner/admin/finance/foreman/viewer`)
+  - cannot remove last owner
+  - cannot demote last owner
+  - audit log writes for add/update/remove events
+
+## Remaining Phase 5 limitations
+- Invite-by-email membership onboarding is not implemented yet (manual `user_id` entry only).
+- Production auth provider/session UX polish remains deferred.

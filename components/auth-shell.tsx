@@ -78,7 +78,7 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
     <>
       <nav className='mb-6 flex flex-wrap items-center gap-4 text-sm'>
         <Link href='/'>Home</Link><Link href='/dashboard'>Dashboard</Link><Link href='/projects'>Projects</Link><Link href='/suppliers'>Suppliers</Link><Link href='/plants'>Plants</Link><Link href='/logs'>Daily Logs</Link>
-        <Link href='/rates'>Rates</Link><Link href='/ipc-periods'>IPC Periods</Link><Link href='/imports'>Imports</Link>
+        <Link href='/rates'>Rates</Link><Link href='/ipc-periods'>IPC Periods</Link><Link href='/imports'>Imports</Link><Link href='/settings/members'>Members</Link>
         {membership && <span className='text-slate-500'>Org: {membership.organization_id} ({membership.role})</span>}
         {isAuthed ? <Button type='button' onClick={logout}>Logout</Button> : <Link href='/login'>Login</Link>}
       </nav>

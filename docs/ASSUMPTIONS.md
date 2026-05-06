@@ -39,3 +39,7 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - `import_rows` RLS is enforced via parent `imports.organization_id` because `import_rows` has no direct `organization_id`; policy checks use parent-row existence and org helper functions.
 - UI flows that create business/import records now assume organization context comes from authenticated `organization_members` lookup, not free-form org UUID entry.
 - Remaining Phase 5 follow-up work after this step: admin membership management UI, and production auth-provider/session polish.
+
+- Phase 5 membership management currently uses manual `user_id` entry (UUID) for add-member operations; invite-by-email UX is intentionally deferred.
+- Membership mutations run through database RPCs (`add_organization_member`, `update_organization_member_role`, `remove_organization_member`) and enforce owner/admin auth plus last-owner protections at the database layer.
+- Production auth-provider/session polish remains deferred; local workflow assumes existing authenticated users are manually linked into `organization_members`.
