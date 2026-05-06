@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/lib/supabase/client';
 import { buildIpcPreview, PlantLogForIpc } from '@/lib/calculations/ipc';
+import { buildFinalizeIpcPayload } from '@/lib/calculations/ipcFinalize';
 import { PlantRate } from '@/lib/calculations/rates';
 
 type Option = {
@@ -106,37 +107,18 @@ export default function IpcPreviewPage() {
     setError(null);
 
     try {
-      const { data: firstPlant } = await supabase.from('plants').select('organization_id').in('id', selectedPlantIds).limit(1).maybeSingle();
-      if (!firstPlant?.organization_id) throw new Error('Unable to determine organization for IPC finalization.');
+      const payload = buildFinalizeIpcPayload({
+        project_id: projectId,
+        supplier_id: supplierId,
+        period_start: periodStart,
+        period_end: periodEnd,
+        selected_plant_ids: selectedPlantIds,
+        tax_percent: taxPercent,
+        lines: result.lines
+      });
 
-      const { data: ipcPeriod, error: ipcPeriodError } = await supabase
-        .from('ipc_periods')
-        .insert({
-          organization_id: firstPlant.organization_id,
-          project_id: projectId,
-          supplier_id: supplierId,
-          period_start: periodStart,
-          period_end: periodEnd,
-          status: 'finalized',
-          subtotal: result.subtotal,
-          tax_total: result.taxTotal,
-          total: result.total
-        })
-        .select('id')
-        .single();
-      if (ipcPeriodError) throw ipcPeriodError;
-
-      const ipcPeriodId = ipcPeriod.id;
-
-      const { error: plantsError } = await supabase.from('ipc_period_plants').insert(selectedPlantIds.map((plantId) => ({ ipc_period_id: ipcPeriodId, plant_id: plantId })));
-      if (plantsError) throw plantsError;
-
-      const { error: linesError } = await supabase.from('ipc_lines').insert(result.lines.map((line) => ({ ...line, ipc_period_id: ipcPeriodId })));
-      if (linesError) throw linesError;
-
-      const logIds = result.lines.map((line) => line.log_id);
-      const { error: logsUpdateError } = await supabase.from('plant_logs').update({ ipc_period_id: ipcPeriodId }).in('id', logIds);
-      if (logsUpdateError) throw logsUpdateError;
+      const { error } = await supabase.rpc('finalize_ipc_period', payload);
+      if (error) throw error;
 
       await runPreview();
     } catch (e: any) {
