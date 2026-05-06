@@ -21,3 +21,6 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Phase 3 import commit now runs through a single database-side Postgres RPC (`commit_import_rows`) so plant log writes, import row linking, and import status update happen atomically in one transaction.
 - `create_flagged_duplicate` remains intentionally uncommitted in Phase 3 because there is no dedicated duplicate-linking/flag column in `plant_logs`; rows with this action are counted as skipped by the RPC and left without `committed_log_id`.
 - Imported Excel sheet is expected to provide normalized keys (`date`, `registration_number`, `start_time`, `end_time`, `lunch_hours`, `unproductive_hours`, `breakdown_hours`, `remarks`) in header row.
+- Phase 4 scan import uses a server-only extraction endpoint (`/api/scan-import`) and returns `extraction_not_configured` unless `SCAN_IMPORT_PROVIDER=mock` is set for a development stub flow.
+- Phase 4 reuses `imports/import_rows` staging and `commit_import_rows` RPC; low-confidence scan rows (`requires_review=true`) are blocked from commit until reviewed.
+- Real OCR/AI provider integration, secure file storage wiring, and provider-specific parsing are deferred until explicit environment configuration and follow-up hardening.

@@ -1,4 +1,6 @@
 export type NormalizedImportRow = {
+  extraction_confidence?: number;
+  requires_review?: boolean;
   date: string | null;
   start_time: string | null;
   end_time: string | null;
