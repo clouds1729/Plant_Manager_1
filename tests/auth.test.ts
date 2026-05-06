@@ -13,13 +13,15 @@ describe('auth route gating helpers', () => {
       '/ipc-periods',
       '/ipc-preview',
       '/imports',
-      '/scan-imports'
+      '/scan-imports',
+      '/settings/members'
     ]);
   });
 
   it('matches exact and nested protected paths', () => {
     expect(isProtectedPath('/dashboard')).toBe(true);
     expect(isProtectedPath('/projects/123')).toBe(true);
+    expect(isProtectedPath('/settings/members')).toBe(true);
     expect(isProtectedPath('/login')).toBe(false);
     expect(isProtectedPath('/')).toBe(false);
   });

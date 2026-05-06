@@ -10,7 +10,8 @@ export const PROTECTED_ROUTES = [
   '/ipc-periods',
   '/ipc-preview',
   '/imports',
-  '/scan-imports'
+  '/scan-imports',
+  '/settings/members'
 ] as const;
 
 export type Membership = {
