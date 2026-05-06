@@ -20,17 +20,24 @@
   - `audit_logs`
   - `plant_logs`
   - `ipc_periods`
-- Policies now enforce organization-member reads and role-limited approval-sensitive writes on the above tables.
-
-## Deferred in this hardening step
-- Full RLS enablement/policies for:
-  - `imports`
-  - `import_rows`
+- **Enabled now (full app-wide business-table hardening):**
   - `projects`
   - `suppliers`
   - `plants`
   - `plant_rates`
-- Reason: current local development/demo flow includes unauthenticated direct CRUD pages; immediate strict RLS on all tables would break those pages before app-wide auth gating is completed.
+  - `imports`
+  - `import_rows` (scoped through parent `imports.organization_id`)
+- Policies now enforce organization-member reads and role-limited approval-sensitive writes on the above tables.
+
+## Role model used for hardened business tables
+- `viewer`: read-only.
+- `admin`/`owner`: can write `projects`, `suppliers`, and `plants`.
+- `finance`/`admin`/`owner`: can write `plant_rates`, `imports`, and `import_rows`.
+- Read access is org-isolated for authenticated org members across all hardened tables.
+
+## import_rows RLS implementation note
+- `import_rows` has no direct `organization_id` and is authorized via `imports` using `import_rows.import_id -> imports.id`.
+- Policies use `EXISTS` checks against parent `imports` so authorization is tenant-aware without adding synthetic org data to child rows.
 
 ## Local development/auth limitations
 - Approval RPC behavior assumes execution in a Supabase Auth context where `auth.uid()` is available.
@@ -57,6 +64,10 @@
 - DB RPC permission checks and RLS remain source-of-truth; UI gating is non-authoritative convenience.
 
 ## Deferred after app gating
-- Full RLS policies for `imports`, `import_rows`, `projects`, `suppliers`, `plants`, `plant_rates`.
 - Admin membership-management UI.
 - Production auth/provider/session UX polish.
+
+## Local development implications
+- Business CRUD and import pages now rely on authenticated membership context for `organization_id` during inserts.
+- Local manual testing must use a signed-in Supabase user that has an `organization_members` row in the target organization.
+- Unauthenticated or non-member sessions should expect empty reads and rejected writes by RLS.

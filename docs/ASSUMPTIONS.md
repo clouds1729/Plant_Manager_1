@@ -29,11 +29,13 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Phase 5 hardening adds role enforcement to approval RPCs using `auth.uid()` and `organization_members` checks; calls now fail when unauthenticated or lacking required org role.
 - `audit_logs.actor_id` is now written from `auth.uid()` in approval RPCs; local SQL-only testing without Supabase Auth context will see `Authentication required` by design.
 - RLS is now enabled for approval-focused tables (`organization_members`, `audit_logs`, `plant_logs`, `ipc_periods`) with organization-isolation read policies and limited update/insert paths for approval activity.
-- Full app-wide RLS across `imports`, `import_rows`, `projects`, `suppliers`, `plants`, and `plant_rates` is intentionally staged/deferred to avoid breaking current unauthenticated local demo CRUD paths; those tables remain a next hardening step.
+- Full app-wide RLS is now enabled for `imports`, `import_rows`, `projects`, `suppliers`, `plants`, and `plant_rates` with org-isolated reads and role-aware writes.
 - `is_org_member` and `has_org_role` are now `SECURITY DEFINER` helpers with fixed `search_path=public` so approval-table RLS and RPC checks do not recurse through `organization_members` RLS evaluation.
 - `organization_members` RLS read policy is intentionally self-row (`auth.uid() = user_id`) to avoid recursive policy evaluation; org-wide member listing remains deferred to a dedicated admin-safe approach.
 
 - Phase 5 auth/app gating now requires Supabase-authenticated users on core app routes (`/dashboard`, `/projects`, `/suppliers`, `/plants`, `/logs`, `/rates`, `/ipc-periods`, `/ipc-preview`, `/imports`, `/scan-imports`); unauthenticated users are shown a sign-in-required screen and directed to `/login`.
 - App shell now fetches current `organization_members` membership for authenticated users and surfaces organization/role context in navigation; users without membership are blocked with an explicit "No organization membership found" state (no synthetic fallback membership).
 - UI-level role-aware approval button visibility is convenience-only and intentionally mirrors DB/RPC rules (`foreman/admin/owner` submit logs; `finance/admin/owner` approve/reject logs; `finance/admin/owner` submit/approve/reject IPC periods), while database checks remain source-of-truth.
-- Remaining Phase 5 follow-up work after this step: full RLS rollout for `imports/import_rows/projects/suppliers/plants/plant_rates`, admin membership management UI, and production auth-provider/session polish.
+- `import_rows` RLS is enforced via parent `imports.organization_id` because `import_rows` has no direct `organization_id`; policy checks use parent-row existence and org helper functions.
+- UI flows that create business/import records now assume organization context comes from authenticated `organization_members` lookup, not free-form org UUID entry.
+- Remaining Phase 5 follow-up work after this step: admin membership management UI, and production auth-provider/session polish.
