@@ -1,4 +1,4 @@
-# Phase 6 Review (Supplier Portal Foundation)
+# Phase 6 Review (Supplier Portal + Reports/Export Foundation)
 
 ## Delivered in this foundation step
 - Added protected `/supplier-portal` route with a minimal supplier-facing, read-only dashboard.
@@ -11,9 +11,12 @@
   - `ipc_periods`
   - `ipc_lines` (via `ipc_periods` join)
 - Internal owner/admin/finance workflows remain unchanged for write paths.
+- Added protected internal-only `/reports` route for IPC summary + line-item review and initial export.
+- Added role-aware report/export gating so CSV export controls are visible only to `owner/admin/finance`.
+- Added lightweight CSV export foundation for IPC lines with a totals row (no PDF library added).
 
 ## Explicitly deferred
-- Reports and PDF exports.
+- Full branded PDF generation and advanced report templates.
 - Billing/subscriptions.
 - Broad UI polish and onboarding/invite polish.
 
