@@ -19,3 +19,14 @@
 
 ## Operational note
 - Supplier-user mapping is manual in this phase (no automated invite/onboarding flow yet).
+
+## Supplier portal data presentation update
+- Replaced raw JSON dumps in `/supplier-portal` with structured read-only UI sections:
+  - Supplier profile card
+  - Plants table
+  - Plant rates table
+  - IPC periods table
+  - IPC line items table
+- Added basic display formatting for currency, dates, and hours plus explicit empty states per data section.
+- Kept portal data retrieval and access model unchanged (same supplier mapping flow and supplier-scoped reads; no mutation flows added).
+- Follow-up fix: removed obsolete raw-JSON render path so `/supplier-portal` has a single structured return path only.
