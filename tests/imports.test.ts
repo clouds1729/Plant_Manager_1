@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { normalizeDate, normalizeRegistrationNumber, normalizeTime } from '@/lib/imports/normalize';
 import { buildImportReviewRows, matchPlantId, preparePlantLogPayload } from '@/lib/imports/workflow';
+import { isImportCommitSummary } from '@/lib/imports/commit';
 
 describe('import normalization', () => {
   it('normalizes date and time formats', () => {
@@ -31,11 +32,31 @@ describe('import matching and conflicts', () => {
     expect(rows[1].plant_match_id).toBeNull();
   });
 
+
+
+  it('stages parsed_data with gross_hours and billable_hours', () => {
+    const [row] = buildImportReviewRows([
+      { registration_number: 'AB123', date: '2026-05-07', start_time: '08:00', end_time: '17:00', lunch_hours: 1, unproductive_hours: 2, breakdown_hours: 1 }
+    ], plants, logs);
+    expect(row.parsed_data.gross_hours).toBe(8);
+    expect(row.parsed_data.billable_hours).toBe(5);
+  });
+
   it('prepares payload with calculated billable hours', () => {
     const [row] = buildImportReviewRows([
       { registration_number: 'AB123', date: '2026-05-07', start_time: '08:00', end_time: '17:00', lunch_hours: 1, unproductive_hours: 2, breakdown_hours: 1 }
     ], plants, logs);
     const payload = preparePlantLogPayload({ ...row, resolution_action: 'replace_existing' }, 'project-1');
     expect(payload.billable_hours).toBe(5);
+  });
+});
+
+describe('import commit rpc summary shape', () => {
+  it('accepts valid summary payload', () => {
+    expect(isImportCommitSummary({ inserted_count: 1, updated_count: 2, skipped_count: 3 })).toBe(true);
+  });
+
+  it('rejects invalid summary payload', () => {
+    expect(isImportCommitSummary({ inserted_count: '1', updated_count: 2, skipped_count: 3 })).toBe(false);
   });
 });

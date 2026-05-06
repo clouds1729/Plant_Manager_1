@@ -5,7 +5,8 @@ import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { buildImportReviewRows, preparePlantLogPayload, type ImportReviewRow, type ResolutionAction } from '@/lib/imports/workflow';
+import { buildImportReviewRows, type ImportReviewRow, type ResolutionAction } from '@/lib/imports/workflow';
+import { isImportCommitSummary } from '@/lib/imports/commit';
 
 type StagedRow = ImportReviewRow & { id: string };
 
@@ -68,46 +69,20 @@ export default function ImportsPage() {
 
   const commit = async () => {
     if (!importId) return;
-    const { data: stagedRows } = await supabase
-      .from('import_rows')
-      .select('id,parsed_data,plant_match_id,conflict_status,resolution_action')
-      .eq('import_id', importId)
-      .order('created_at', { ascending: true });
 
-    for (const stagedRow of stagedRows ?? []) {
-      const row = {
-        raw_data: {},
-        parsed_data: stagedRow.parsed_data,
-        plant_match_id: stagedRow.plant_match_id,
-        validation_status: 'valid',
-        validation_warnings: [],
-        conflict_status: stagedRow.conflict_status,
-        resolution_action: stagedRow.resolution_action
-      } as ImportReviewRow;
-
-      if (!row.plant_match_id || !row.parsed_data?.date) continue;
-      if (row.resolution_action === 'skip_imported') continue;
-      if (row.conflict_status === 'conflict' && row.resolution_action === 'keep_existing') continue;
-      if (row.conflict_status === 'conflict' && row.resolution_action === 'create_flagged_duplicate') continue;
-
-      const payload = preparePlantLogPayload(row, projectId);
-      if (row.conflict_status === 'conflict' && row.resolution_action === 'replace_existing') {
-        const { data: updated } = await supabase
-          .from('plant_logs')
-          .update(payload)
-          .eq('plant_id', row.plant_match_id)
-          .eq('date', row.parsed_data.date)
-          .select('id')
-          .single();
-        if (updated?.id) await supabase.from('import_rows').update({ committed_log_id: updated.id }).eq('id', stagedRow.id);
-      } else {
-        const { data: inserted } = await supabase.from('plant_logs').insert(payload).select('id').single();
-        if (inserted?.id) await supabase.from('import_rows').update({ committed_log_id: inserted.id }).eq('id', stagedRow.id);
-      }
+    const { data, error } = await supabase.rpc('commit_import_rows', { p_import_id: importId });
+    if (error) {
+      alert(error.message);
+      return;
     }
 
-    await supabase.from('imports').update({ status: 'committed' }).eq('id', importId);
-    alert('Import commit complete.');
+    const summary = Array.isArray(data) ? data[0] : data;
+    if (!isImportCommitSummary(summary)) {
+      alert('Import committed, but summary payload was malformed.');
+      return;
+    }
+
+    alert(`Import commit complete. Inserted: ${summary.inserted_count}, updated: ${summary.updated_count}, skipped: ${summary.skipped_count}.`);
   };
 
   return <section className='space-y-4'>

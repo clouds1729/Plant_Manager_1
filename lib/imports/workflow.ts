@@ -23,6 +23,10 @@ export function matchPlantId(plants: Array<{ id: string; registration_number: st
 export function buildImportReviewRows(rawRows: Record<string, unknown>[], plants: Array<{ id: string; registration_number: string }>, existingLogs: Array<{ id: string; plant_id: string; date: string }>): ImportReviewRow[] {
   return rawRows.map((raw) => {
     const parsed = normalizeImportRow(raw);
+    const gross = calculateGrossHours(parsed.start_time, parsed.end_time, parsed.lunch_hours);
+    const billable = calculateBillableHours(gross, parsed.unproductive_hours, parsed.breakdown_hours);
+    const parsedWithHours: NormalizedImportRow = { ...parsed, gross_hours: gross, billable_hours: billable };
+
     const warnings: string[] = [];
     if (!parsed.date) warnings.push('Missing/invalid date');
     if (!parsed.registration_number) warnings.push('Missing registration number');
@@ -34,7 +38,7 @@ export function buildImportReviewRows(rawRows: Record<string, unknown>[], plants
 
     return {
       raw_data: raw,
-      parsed_data: parsed,
+      parsed_data: parsedWithHours,
       plant_match_id: plantId,
       validation_status: warnings.length === 0 ? 'valid' : warnings.some((w) => w.includes('Missing')) ? 'invalid' : 'warning',
       validation_warnings: warnings,
@@ -46,8 +50,7 @@ export function buildImportReviewRows(rawRows: Record<string, unknown>[], plants
 
 export function preparePlantLogPayload(row: ImportReviewRow, projectId: string) {
   const p = row.parsed_data;
-  const gross = calculateGrossHours(p.start_time, p.end_time, p.lunch_hours);
-  const billable = calculateBillableHours(gross, p.unproductive_hours, p.breakdown_hours);
+
   return {
     project_id: projectId,
     plant_id: row.plant_match_id,
@@ -57,7 +60,7 @@ export function preparePlantLogPayload(row: ImportReviewRow, projectId: string) 
     lunch_hours: p.lunch_hours,
     unproductive_hours: p.unproductive_hours,
     breakdown_hours: p.breakdown_hours,
-    billable_hours: billable,
+    billable_hours: p.billable_hours,
     remarks: p.remarks,
     source: 'excel' as const
   };

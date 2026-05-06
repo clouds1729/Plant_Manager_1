@@ -6,6 +6,8 @@ export type NormalizedImportRow = {
   lunch_hours: number;
   unproductive_hours: number;
   breakdown_hours: number;
+  gross_hours: number;
+  billable_hours: number;
   remarks: string;
 };
 
@@ -68,6 +70,8 @@ export function normalizeImportRow(raw: Record<string, unknown>): NormalizedImpo
     lunch_hours: normalizeNumber(raw.lunch_hours),
     unproductive_hours: normalizeNumber(raw.unproductive_hours),
     breakdown_hours: normalizeNumber(raw.breakdown_hours),
+    gross_hours: 0,
+    billable_hours: 0,
     remarks: normalizeRemarks(raw.remarks)
   };
 }

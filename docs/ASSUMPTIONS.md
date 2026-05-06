@@ -18,5 +18,6 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - IPC finalization now uses a single database-side Postgres RPC (`finalize_ipc_period`) that performs period creation, line inserts, plant linking, and `plant_logs.ipc_period_id` updates atomically in one transaction.
 - Remaining limitation: while finalization is atomic, full approval workflow, audit logging, and RLS-hardening for RPC execution are still deferred to later phases.
 - Phase 3 Excel upload parses in-browser, then persists staged rows into `imports` and `import_rows`; users can update conflict resolution actions and commit from the staged records.
-- `create_flagged_duplicate` is intentionally not committed in Phase 3 because there is no dedicated duplicate-linking/flag column in `plant_logs`; rows with this action are retained uncommitted.
+- Phase 3 import commit now runs through a single database-side Postgres RPC (`commit_import_rows`) so plant log writes, import row linking, and import status update happen atomically in one transaction.
+- `create_flagged_duplicate` remains intentionally uncommitted in Phase 3 because there is no dedicated duplicate-linking/flag column in `plant_logs`; rows with this action are counted as skipped by the RPC and left without `committed_log_id`.
 - Imported Excel sheet is expected to provide normalized keys (`date`, `registration_number`, `start_time`, `end_time`, `lunch_hours`, `unproductive_hours`, `breakdown_hours`, `remarks`) in header row.
