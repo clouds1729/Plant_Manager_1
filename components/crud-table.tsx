@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase/client';
+import { getCurrentMembership } from '@/lib/membership';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -11,12 +12,25 @@ type Props<T extends z.ZodTypeAny> = { table: string; schema: T; fields: Array<{
 
 export function CrudTable<T extends z.ZodTypeAny>({ table, schema, fields, title }: Props<T>) {
   const [rows, setRows] = useState<any[]>([]);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
   const { register, handleSubmit, reset } = useForm<any>({ resolver: zodResolver(schema as any) });
 
   const load = async () => { const { data } = await supabase.from(table).select('*').order('created_at', { ascending: false }); setRows(data ?? []); };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const bootstrap = async () => {
+      const membership = await getCurrentMembership();
+      setOrganizationId(membership?.organization_id ?? null);
+      await load();
+    };
+    void bootstrap();
+  }, []);
 
-  const onSubmit = async (values: any) => { await supabase.from(table).insert(values); reset(); load(); };
+  const onSubmit = async (values: any) => {
+    const payload = organizationId ? { ...values, organization_id: organizationId } : values;
+    await supabase.from(table).insert(payload);
+    reset();
+    load();
+  };
   const remove = async (id: string) => { await supabase.from(table).delete().eq('id', id); load(); };
   const update = async (row: any) => {
     const nextName = prompt('Enter new value for first field', row[fields[0].name]);

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { buildImportReviewRows, type ImportReviewRow, type ResolutionAction } from '@/lib/imports/workflow';
 import { isImportCommitSummary } from '@/lib/imports/commit';
+import { getCurrentMembership } from '@/lib/membership';
 
 type StagedRow = ImportReviewRow & { id: string };
 
@@ -17,8 +18,18 @@ export default function ImportsPage() {
   const [fileName, setFileName] = useState('');
   const [rows, setRows] = useState<StagedRow[]>([]);
 
+  const ensureOrganizationId = async () => {
+    if (organizationId) return organizationId;
+    const membership = await getCurrentMembership();
+    const next = membership?.organization_id ?? '';
+    setOrganizationId(next);
+    return next;
+  };
+
   const parseFile = async (file?: File) => {
-    if (!file || !projectId || !organizationId) return;
+    if (!file || !projectId) return;
+    const orgId = await ensureOrganizationId();
+    if (!orgId) return;
     setFileName(file.name);
 
     const data = await file.arrayBuffer();
@@ -32,7 +43,7 @@ export default function ImportsPage() {
 
     const { data: createdImport, error: importError } = await supabase
       .from('imports')
-      .insert({ organization_id: organizationId, project_id: projectId, source_type: 'excel', file_name: file.name, status: 'parsed' })
+      .insert({ organization_id: orgId, project_id: projectId, source_type: 'excel', file_name: file.name, status: 'parsed' })
       .select('id')
       .single();
     if (importError || !createdImport) {
@@ -87,7 +98,7 @@ export default function ImportsPage() {
 
   return <section className='space-y-4'>
     <h1 className='text-xl font-semibold'>Excel Imports</h1>
-    <Input placeholder='Organization UUID' value={organizationId} onChange={(e) => setOrganizationId(e.target.value)} />
+    <Input placeholder='Organization UUID (auto from membership)' value={organizationId} readOnly />
     <Input placeholder='Project UUID' value={projectId} onChange={(e) => setProjectId(e.target.value)} />
     <Input type='file' accept='.xlsx,.xls' onChange={(e) => parseFile(e.target.files?.[0])} />
     {fileName ? <p className='text-sm text-slate-600'>Loaded: {fileName} {importId ? `(import: ${importId})` : ''}</p> : null}
