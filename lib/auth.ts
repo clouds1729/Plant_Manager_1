@@ -11,7 +11,8 @@ export const PROTECTED_ROUTES = [
   '/ipc-preview',
   '/imports',
   '/scan-imports',
-  '/settings/members'
+  '/settings/members',
+  '/supplier-portal'
 ] as const;
 
 export type Membership = {

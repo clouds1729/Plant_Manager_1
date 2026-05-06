@@ -1,4 +1,4 @@
-export const ORG_ROLES = ['owner', 'admin', 'finance', 'foreman', 'viewer'] as const;
+export const ORG_ROLES = ['owner', 'admin', 'finance', 'foreman', 'viewer', 'supplier_viewer'] as const;
 
 export type OrgRole = (typeof ORG_ROLES)[number];
 

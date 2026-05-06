@@ -32,6 +32,6 @@ describe('approval role permissions', () => {
   });
 
   it('keeps phase 5 hardening role set constrained', () => {
-    expect(ORG_ROLES).toEqual(['owner', 'admin', 'finance', 'foreman', 'viewer']);
+    expect(ORG_ROLES).toEqual(['owner', 'admin', 'finance', 'foreman', 'viewer', 'supplier_viewer']);
   });
 });
