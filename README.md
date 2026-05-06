@@ -15,9 +15,32 @@ Core outcomes:
 
 ## Current implementation status
 
-- **Phase 1 complete foundation**: app shell, CRUD for projects/suppliers/plants/logs, dashboard metrics, and hour-calculation utilities.
-- **Phase 2 in progress**: rate history and IPC generation foundation.
-- **Not yet implemented**: Excel import, AI scan import, approval workflows, supplier portal, billing/subscriptions.
+- **Phase 1 complete**: SaaS foundation, projects/suppliers/plants/logs, dashboard, and hour calculation tests.
+- **Phase 2 complete/hardened**: rates, IPC preview, IPC periods, and IPC finalization via Postgres RPC.
+- **Phase 3 complete/hardened**: Excel import staging, `import_rows`, conflict detection, and reviewed commit via Postgres RPC.
+- **Phase 4 complete foundation**: scan import route, server-only extraction placeholder, mock provider mode, confidence/review metadata, and shared staging pipeline.
+- **Phase 5 not started**: approval workflows, audit logs, and RLS/permissions hardening.
+- **Phase 6 not started**: supplier portal, reports, PDF exports, billing/subscriptions/polish.
+
+## Implemented routes
+
+- `/dashboard`
+- `/projects`
+- `/suppliers`
+- `/plants`
+- `/logs`
+- `/rates`
+- `/ipc-periods`
+- `/ipc-preview`
+- `/imports`
+- `/scan-imports`
+
+## Important limitations
+
+- Real OCR/AI provider is not wired yet; scan import uses explicit mock/dev provider only.
+- Approval workflow, audit logging, and RLS/RPC authorization hardening are deferred to Phase 5.
+- `create_flagged_duplicate` remains intentionally uncommitted.
+- Excel headers are currently expected to use normalized keys.
 
 ## Local setup
 
