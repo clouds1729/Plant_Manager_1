@@ -41,3 +41,22 @@
 - `is_org_member` / `has_org_role` are implemented as `SECURITY DEFINER` with `search_path=public` and query `public.organization_members` directly to make them safe in RLS predicates for approval-focused tables.
 - `organization_members` itself uses a non-recursive self-row read policy (`auth.uid() = user_id`) rather than a policy that calls membership helper functions against the same table.
 
+
+## App auth gating added
+- Added `/login` page with Supabase email/password sign-in and global logout action in app shell.
+- Added protected-route gating for main app routes: unauthenticated users now see a clear sign-in-required state.
+- Added authenticated membership fetch from `organization_members` and explicit no-membership state.
+- Exposed current `organization_id` and role in the app nav for context.
+
+## Role-aware UI convenience gating
+- Plant log approval UI now hides actions based on role:
+  - Submit: `foreman/admin/owner`
+  - Approve/reject: `finance/admin/owner`
+  - `viewer`: read-only status display.
+- IPC period approval UI now hides submit/approve/reject actions unless role is `finance/admin/owner`; `viewer` remains read-only.
+- DB RPC permission checks and RLS remain source-of-truth; UI gating is non-authoritative convenience.
+
+## Deferred after app gating
+- Full RLS policies for `imports`, `import_rows`, `projects`, `suppliers`, `plants`, `plant_rates`.
+- Admin membership-management UI.
+- Production auth/provider/session UX polish.

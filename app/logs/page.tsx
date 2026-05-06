@@ -9,9 +9,11 @@ import { calculateBillableHours, calculateGrossHours } from '@/lib/calculations/
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { canTransitionApprovalStatus, type ApprovalStatus } from '@/lib/approvals/status';
+import { canApproveOrRejectPlantLog, canSubmitPlantLog, type OrgRole } from '@/lib/approvals/roles';
 
 export default function LogsPage() {
   const [rows, setRows] = useState<any[]>([]);
+  const [role, setRole] = useState<OrgRole | null>(null);
   const { register, handleSubmit, reset } = useForm({
     resolver: zodResolver(plantLogSchema as any),
     defaultValues: { lunch_hours: 0, unproductive_hours: 0, breakdown_hours: 0 }
@@ -28,6 +30,13 @@ export default function LogsPage() {
 
   useEffect(() => {
     load();
+    const loadRole = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      const { data: member } = await supabase.from('organization_members').select('role').eq('user_id', data.user.id).limit(1).maybeSingle();
+      setRole((member?.role as OrgRole | undefined) ?? null);
+    };
+    void loadRole();
   }, []);
 
   const transition = async (logId: string, action: 'submit' | 'approve' | 'reject') => {
@@ -78,15 +87,16 @@ export default function LogsPage() {
                 Status: <span className='font-medium'>{status}</span>
               </div>
               <div className='mt-2 flex gap-2'>
-                {canTransitionApprovalStatus(status, 'submitted') && (
+                {canTransitionApprovalStatus(status, 'submitted') && role !== null && canSubmitPlantLog(role) && (
                   <Button type='button' onClick={() => transition(row.id, 'submit')}>Submit</Button>
                 )}
-                {canTransitionApprovalStatus(status, 'approved') && (
+                {canTransitionApprovalStatus(status, 'approved') && role !== null && canApproveOrRejectPlantLog(role) && (
                   <Button type='button' onClick={() => transition(row.id, 'approve')}>Approve</Button>
                 )}
-                {canTransitionApprovalStatus(status, 'rejected') && (
+                {canTransitionApprovalStatus(status, 'rejected') && role !== null && canApproveOrRejectPlantLog(role) && (
                   <Button type='button' onClick={() => transition(row.id, 'reject')}>Reject</Button>
                 )}
+                {role === 'viewer' && <span className='text-slate-500'>Read-only</span>}
               </div>
             </div>
           );
