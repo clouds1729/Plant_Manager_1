@@ -14,7 +14,8 @@ describe('auth route gating helpers', () => {
       '/ipc-preview',
       '/imports',
       '/scan-imports',
-      '/settings/members'
+      '/settings/members',
+      '/supplier-portal'
     ]);
   });
 
@@ -22,6 +23,7 @@ describe('auth route gating helpers', () => {
     expect(isProtectedPath('/dashboard')).toBe(true);
     expect(isProtectedPath('/projects/123')).toBe(true);
     expect(isProtectedPath('/settings/members')).toBe(true);
+    expect(isProtectedPath('/supplier-portal')).toBe(true);
     expect(isProtectedPath('/login')).toBe(false);
     expect(isProtectedPath('/')).toBe(false);
   });

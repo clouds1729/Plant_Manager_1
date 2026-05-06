@@ -43,3 +43,9 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Phase 5 membership management currently uses manual `user_id` entry (UUID) for add-member operations; invite-by-email UX is intentionally deferred.
 - Membership mutations run through database RPCs (`add_organization_member`, `update_organization_member_role`, `remove_organization_member`) and enforce owner/admin auth plus last-owner protections at the database layer.
 - Production auth-provider/session polish remains deferred; local workflow assumes existing authenticated users are manually linked into `organization_members`.
+
+- Phase 6 supplier portal foundation introduces a manual `supplier_users` mapping; users without a mapping intentionally see "No supplier portal access found.".
+- Supplier portal is intentionally read-only in this phase and only exposes supplier-scoped profile/plants/rates/IPC data.
+- Supplier-scoped read policies now apply only when a user lacks an internal org role (`owner/admin/finance/foreman/viewer`); users with both `supplier_viewer` and an internal role retain internal read scope.
+- Invite/onboarding polish for supplier users remains deferred.
+- Reports/PDF exports and billing/subscriptions remain deferred beyond this foundation step.
