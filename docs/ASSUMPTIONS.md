@@ -24,3 +24,5 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Phase 4 scan import uses a server-only extraction endpoint (`/api/scan-import`) and returns `extraction_not_configured` unless `SCAN_IMPORT_PROVIDER=mock` is set for a development stub flow.
 - Phase 4 reuses `imports/import_rows` staging and `commit_import_rows` RPC; low-confidence scan rows (`requires_review=true`) are blocked from commit until reviewed.
 - Real OCR/AI provider integration, secure file storage wiring, and provider-specific parsing are deferred until explicit environment configuration and follow-up hardening.
+- Phase 5 approval workflow foundation now exists for `plant_logs` and `ipc_periods` with status fields (`draft/submitted/approved/rejected`) and database RPC transitions; role enforcement and RLS hardening are still deferred to the next Phase 5 hardening step.
+- Phase 5 foundation introduces `audit_logs` table and writes approval-transition audit rows from RPCs; `actor_id` is currently nullable until Supabase Auth identity is fully wired into RPC context.
