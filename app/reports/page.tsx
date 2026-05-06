@@ -62,7 +62,7 @@ export default function ReportsPage() {
       <label className='text-sm font-medium' htmlFor='period-id'>IPC Period ID</label>
       <div className='flex max-w-2xl gap-2'><Input id='period-id' value={periodId} onChange={(e) => setPeriodId(e.target.value)} placeholder='Enter IPC period UUID' /><Button type='button' onClick={loadReport}>Load</Button></div>
       {message && <p className='text-sm text-slate-600'>{message}</p>}
-      {!hasReportAccess && role !== null && <p className='text-sm text-amber-700'>Finance/admin access required for export controls.</p>}
+      {!hasReportAccess && role !== null && <p className='text-sm text-amber-700'>Finance/admin access required for print/export controls.</p>}
     </section>
     {period && <>
       <section className='rounded border p-4'>
@@ -72,7 +72,7 @@ export default function ReportsPage() {
         </dl>
       </section>
       <section className='rounded border p-4'>
-        <div className='mb-3 flex items-center justify-between'><h2 className='font-medium'>Line Items</h2>{hasReportAccess && <Button type='button' onClick={exportCsv}>Export CSV</Button>}</div>
+        <div className='mb-3 flex items-center justify-between'><h2 className='font-medium'>Line Items</h2>{hasReportAccess && <div className='flex gap-2'><Button type='button' onClick={exportCsv}>Export CSV</Button><a className='inline-flex items-center rounded-md border px-3 py-2 text-sm font-medium' href={`/reports/print?periodId=${period.id}`}>Open Print View</a></div>}</div>
         {lines.length === 0 ? <p className='text-sm text-slate-500'>No IPC lines found.</p> : <div className='overflow-x-auto'><table className='w-full text-left text-sm'><thead><tr className='border-b'><th>Plant ID</th><th>Hours</th><th>Rate</th><th>Subtotal</th><th>Tax</th><th>Total</th></tr></thead><tbody>{lines.map((line) => <tr key={line.id} className='border-b last:border-b-0'><td className='py-2'>{line.plant_id}</td><td>{line.hours}</td><td>{line.rate}</td><td>{line.subtotal}</td><td>{line.tax_amount}</td><td>{line.total}</td></tr>)}</tbody></table></div>}
         <div className='mt-4 grid grid-cols-1 gap-1 text-sm sm:grid-cols-3'><div>Subtotal: <span className='font-medium'>{period.subtotal ?? derivedTotals.subtotal}</span></div><div>Tax Total: <span className='font-medium'>{period.tax_total ?? derivedTotals.taxTotal}</span></div><div>Total: <span className='font-medium'>{period.total ?? derivedTotals.total}</span></div></div>
       </section>

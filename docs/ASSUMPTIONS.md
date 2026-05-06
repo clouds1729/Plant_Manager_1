@@ -51,3 +51,4 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Reports/PDF exports and billing/subscriptions remain deferred beyond this foundation step.
 - Phase 6 reports/export foundation is internal-only (`/reports`) and targets finance/admin workflows first; supplier-facing report access remains out of scope.
 - CSV export of existing IPC line data is the first export artifact; full branded PDF export remains deferred to a later Phase 6 step.
+- Phase 6 current PDF path is browser print-to-PDF from internal `/reports/print`; branded/server-side PDF generation remains deferred.

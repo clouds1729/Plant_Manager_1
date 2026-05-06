@@ -14,9 +14,10 @@
 - Added protected internal-only `/reports` route for IPC summary + line-item review and initial export.
 - Added role-aware report/export gating so CSV export controls are visible only to `owner/admin/finance`.
 - Added lightweight CSV export foundation for IPC lines with a totals row (no PDF library added).
+- Added protected `/reports/print` internal print view that reuses IPC period + IPC line report data and supports browser print-to-PDF via `window.print()`.
 
 ## Explicitly deferred
-- Full branded PDF generation and advanced report templates.
+- Full branded/server-side PDF generation and advanced report templates (current PDF path is browser print-to-PDF from /reports/print).
 - Billing/subscriptions.
 - Broad UI polish and onboarding/invite polish.
 
