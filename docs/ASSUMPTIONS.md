@@ -15,3 +15,4 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Phase 2 foundation stores IPC line items per log so totals are reproducible and rates are resolved by effective date on each log date.
 - IPC preview/finalization logic blocks finalization when any included log is missing an effective rate.
 - Log locking in this phase is represented by linking included logs with `plant_logs.ipc_period_id`; stricter workflow/permissions enforcement is deferred to approvals phase.
+- IPC preview/finalization currently performs multiple Supabase writes from the client without a database transaction; if any write fails after `ipc_periods` insert, manual cleanup may be required until Phase 3/5 introduces RPC transaction hardening and audit workflow.
