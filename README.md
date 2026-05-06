@@ -20,7 +20,7 @@ Core outcomes:
 - **Phase 3 complete/hardened**: Excel import staging, conflict detection, and atomic import commit RPC.
 - **Phase 4 complete foundation**: scan import route, server-only extraction placeholder, mock provider mode, and confidence/review metadata.
 - **Phase 5 mostly complete**: approval workflows, audit logs, auth gating, role-aware UI, app-wide RLS, and admin membership management.
-- **Phase 6 not started**: supplier portal, reports, PDF exports, billing/subscriptions, and polish.
+- **Phase 6 in progress**: supplier portal, internal reports, CSV export, and browser print-to-PDF foundation.
 
 ## Implemented routes
 
@@ -36,13 +36,19 @@ Core outcomes:
 - `/imports`
 - `/scan-imports`
 - `/settings/members`
+- `/supplier-portal`
+- `/reports`
+- `/reports/print`
 
 ## Important limitations
 
 - Invite-by-email membership onboarding is not implemented yet; membership currently uses manual `user_id` entry.
 - Production auth/session provider polish is deferred.
 - Real OCR/AI provider is not wired yet; scan import currently uses mock/dev provider mode.
-- Supplier portal, reports, PDF exports, and billing/subscriptions are not implemented yet.
+- Billing/subscriptions are deferred.
+- Branded/server-side PDF generation is deferred (current path is browser print-to-PDF from reports).
+- Broad UI polish and onboarding/invite polish are deferred.
+- Supplier portal and reports/export are foundation-level and not production-polished yet.
 - `create_flagged_duplicate` remains intentionally uncommitted.
 - Excel headers are currently expected to use normalized keys.
 
