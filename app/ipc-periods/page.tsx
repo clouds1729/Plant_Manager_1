@@ -6,6 +6,7 @@ import { CrudTable } from '@/components/crud-table';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { canTransitionApprovalStatus, type ApprovalStatus } from '@/lib/approvals/status';
+import { canSubmitOrApproveOrRejectIpcPeriod, type OrgRole } from '@/lib/approvals/roles';
 
 const ipcPeriodSchema = z.object({
   project_id: z.string().uuid(),
@@ -17,6 +18,7 @@ const ipcPeriodSchema = z.object({
 
 export default function IpcPeriodsPage() {
   const [rows, setRows] = useState<any[]>([]);
+  const [role, setRole] = useState<OrgRole | null>(null);
 
   const load = async () => {
     const { data } = await supabase
@@ -29,6 +31,13 @@ export default function IpcPeriodsPage() {
 
   useEffect(() => {
     load();
+    const loadRole = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (!data.user) return;
+      const { data: member } = await supabase.from('organization_members').select('role').eq('user_id', data.user.id).limit(1).maybeSingle();
+      setRole((member?.role as OrgRole | undefined) ?? null);
+    };
+    void loadRole();
   }, []);
 
   const transition = async (ipcPeriodId: string, action: 'submit' | 'approve' | 'reject') => {
@@ -70,15 +79,16 @@ export default function IpcPeriodsPage() {
                 Status: <span className='font-medium'>{status}</span>
               </div>
               <div className='mt-2 flex gap-2'>
-                {canTransitionApprovalStatus(status, 'submitted') && (
+                {canTransitionApprovalStatus(status, 'submitted') && role !== null && canSubmitOrApproveOrRejectIpcPeriod(role) && (
                   <Button type='button' onClick={() => transition(row.id, 'submit')}>Submit</Button>
                 )}
-                {canTransitionApprovalStatus(status, 'approved') && (
+                {canTransitionApprovalStatus(status, 'approved') && role !== null && canSubmitOrApproveOrRejectIpcPeriod(role) && (
                   <Button type='button' onClick={() => transition(row.id, 'approve')}>Approve</Button>
                 )}
-                {canTransitionApprovalStatus(status, 'rejected') && (
+                {canTransitionApprovalStatus(status, 'rejected') && role !== null && canSubmitOrApproveOrRejectIpcPeriod(role) && (
                   <Button type='button' onClick={() => transition(row.id, 'reject')}>Reject</Button>
                 )}
+                {role === 'viewer' && <span className='text-slate-500'>Read-only</span>}
               </div>
             </div>
           );
