@@ -12,7 +12,8 @@ export const PROTECTED_ROUTES = [
   '/imports',
   '/scan-imports',
   '/settings/members',
-  '/supplier-portal'
+  '/supplier-portal',
+  '/reports'
 ] as const;
 
 export type Membership = {

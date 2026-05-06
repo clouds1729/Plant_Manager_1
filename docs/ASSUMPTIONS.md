@@ -49,3 +49,5 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Supplier-scoped read policies now apply only when a user lacks an internal org role (`owner/admin/finance/foreman/viewer`); users with both `supplier_viewer` and an internal role retain internal read scope.
 - Invite/onboarding polish for supplier users remains deferred.
 - Reports/PDF exports and billing/subscriptions remain deferred beyond this foundation step.
+- Phase 6 reports/export foundation is internal-only (`/reports`) and targets finance/admin workflows first; supplier-facing report access remains out of scope.
+- CSV export of existing IPC line data is the first export artifact; full branded PDF export remains deferred to a later Phase 6 step.

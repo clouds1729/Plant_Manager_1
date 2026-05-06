@@ -15,8 +15,13 @@ describe('auth route gating helpers', () => {
       '/imports',
       '/scan-imports',
       '/settings/members',
-      '/supplier-portal'
+      '/supplier-portal',
+      '/reports'
     ]);
+  });
+
+  it('does not include duplicate protected routes', () => {
+    expect(new Set(PROTECTED_ROUTES).size).toBe(PROTECTED_ROUTES.length);
   });
 
   it('matches exact and nested protected paths', () => {
