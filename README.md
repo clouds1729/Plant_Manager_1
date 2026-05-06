@@ -15,15 +15,16 @@ Core outcomes:
 
 ## Current implementation status
 
-- **Phase 1 complete**: SaaS foundation, projects/suppliers/plants/logs, dashboard, and hour calculation tests.
-- **Phase 2 complete/hardened**: rates, IPC preview, IPC periods, and IPC finalization via Postgres RPC.
-- **Phase 3 complete/hardened**: Excel import staging, `import_rows`, conflict detection, and reviewed commit via Postgres RPC.
-- **Phase 4 complete foundation**: scan import route, server-only extraction placeholder, mock provider mode, confidence/review metadata, and shared staging pipeline.
-- **Phase 5 not started**: approval workflows, audit logs, and RLS/permissions hardening.
-- **Phase 6 not started**: supplier portal, reports, PDF exports, billing/subscriptions/polish.
+- **Phase 1 complete**: SaaS foundation, CRUD, dashboard, and hour calculations.
+- **Phase 2 complete/hardened**: rates, IPC preview, IPC periods, and atomic IPC finalization RPC.
+- **Phase 3 complete/hardened**: Excel import staging, conflict detection, and atomic import commit RPC.
+- **Phase 4 complete foundation**: scan import route, server-only extraction placeholder, mock provider mode, and confidence/review metadata.
+- **Phase 5 mostly complete**: approval workflows, audit logs, auth gating, role-aware UI, app-wide RLS, and admin membership management.
+- **Phase 6 not started**: supplier portal, reports, PDF exports, billing/subscriptions, and polish.
 
 ## Implemented routes
 
+- `/login`
 - `/dashboard`
 - `/projects`
 - `/suppliers`
@@ -34,11 +35,14 @@ Core outcomes:
 - `/ipc-preview`
 - `/imports`
 - `/scan-imports`
+- `/settings/members`
 
 ## Important limitations
 
-- Real OCR/AI provider is not wired yet; scan import uses explicit mock/dev provider only.
-- Approval workflow, audit logging, and RLS/RPC authorization hardening are deferred to Phase 5.
+- Invite-by-email membership onboarding is not implemented yet; membership currently uses manual `user_id` entry.
+- Production auth/session provider polish is deferred.
+- Real OCR/AI provider is not wired yet; scan import currently uses mock/dev provider mode.
+- Supplier portal, reports, PDF exports, and billing/subscriptions are not implemented yet.
 - `create_flagged_duplicate` remains intentionally uncommitted.
 - Excel headers are currently expected to use normalized keys.
 
