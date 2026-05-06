@@ -26,3 +26,10 @@ When a requirement is ambiguous, choose the simplest production-safe interpretat
 - Real OCR/AI provider integration, secure file storage wiring, and provider-specific parsing are deferred until explicit environment configuration and follow-up hardening.
 - Phase 5 approval workflow foundation now exists for `plant_logs` and `ipc_periods` with status fields (`draft/submitted/approved/rejected`) and database RPC transitions; role enforcement and RLS hardening are still deferred to the next Phase 5 hardening step.
 - Phase 5 foundation introduces `audit_logs` table and writes approval-transition audit rows from RPCs; `actor_id` is currently nullable until Supabase Auth identity is fully wired into RPC context.
+- Phase 5 hardening adds role enforcement to approval RPCs using `auth.uid()` and `organization_members` checks; calls now fail when unauthenticated or lacking required org role.
+- `audit_logs.actor_id` is now written from `auth.uid()` in approval RPCs; local SQL-only testing without Supabase Auth context will see `Authentication required` by design.
+- RLS is now enabled for approval-focused tables (`organization_members`, `audit_logs`, `plant_logs`, `ipc_periods`) with organization-isolation read policies and limited update/insert paths for approval activity.
+- Full app-wide RLS across `imports`, `import_rows`, `projects`, `suppliers`, `plants`, and `plant_rates` is intentionally staged/deferred to avoid breaking current unauthenticated local demo CRUD paths; those tables remain a next hardening step.
+- `is_org_member` and `has_org_role` are now `SECURITY DEFINER` helpers with fixed `search_path=public` so approval-table RLS and RPC checks do not recurse through `organization_members` RLS evaluation.
+- `organization_members` RLS read policy is intentionally self-row (`auth.uid() = user_id`) to avoid recursive policy evaluation; org-wide member listing remains deferred to a dedicated admin-safe approach.
+
