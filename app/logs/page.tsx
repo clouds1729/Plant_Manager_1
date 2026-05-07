@@ -11,6 +11,8 @@ import { canTransitionApprovalStatus, type ApprovalStatus } from '@/lib/approval
 import { canApproveOrRejectPlantLog, canSubmitPlantLog, type OrgRole } from '@/lib/approvals/roles';
 import { getCurrentMembership } from '@/lib/membership';
 import { buildPlantLogCreatePayload } from '@/lib/crud';
+import { createActivityEvent } from '@/lib/activity';
+import { CommentsPanel } from '@/components/comments-panel';
 
 export default function LogsPage() {
   const [rows, setRows] = useState<any[]>([]);
@@ -21,6 +23,7 @@ export default function LogsPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedLogId, setSelectedLogId] = useState<string | null>(null);
   const { register, handleSubmit, reset } = useForm({
     resolver: zodResolver(plantLogSchema as any),
     defaultValues: { lunch_hours: 0, unproductive_hours: 0, breakdown_hours: 0 }
@@ -58,6 +61,7 @@ export default function LogsPage() {
         : 'reject_plant_log';
 
     await supabase.rpc(fn, { log_id: logId, notes: null });
+    if (organizationId) await createActivityEvent({ organizationId, eventType: `daily_log_${action}ed`, entityType: 'plant_log', entityId: logId, message: `Daily log ${action}ed` });
     await load();
   };
 
@@ -72,12 +76,13 @@ export default function LogsPage() {
     }
 
     const payload = buildPlantLogCreatePayload(v, organizationId);
-    const { error } = await supabase.from('plant_logs').insert(payload);
+    const { data: inserted, error } = await supabase.from('plant_logs').insert(payload).select('id').single();
     if (error) {
       setErrorMessage(error.message);
       setIsSubmitting(false);
       return;
     }
+    if (organizationId && inserted?.id) await createActivityEvent({ organizationId, eventType: 'daily_log_created', entityType: 'plant_log', entityId: inserted.id, message: 'Daily log created' });
     reset();
     setSuccessMessage('Daily log created.');
     await load();
@@ -150,12 +155,14 @@ export default function LogsPage() {
                 {canTransitionApprovalStatus(status, 'rejected') && role !== null && canApproveOrRejectPlantLog(role) && (
                   <Button type='button' onClick={() => transition(row.id, 'reject')}>Reject</Button>
                 )}
+                <Button type='button' onClick={() => setSelectedLogId(row.id)}>Comments</Button>
                 {role === 'viewer' && <span className='text-slate-500'>Read-only</span>}
               </div>
             </div>
           );
         })}
       </div>
+      {selectedLogId ? <CommentsPanel entityType='plant_log' entityId={selectedLogId} /> : null}
     </section>
   );
 }

@@ -6,6 +6,7 @@ import { getCurrentMembership } from '@/lib/membership';
 import type { OrgRole } from '@/lib/approvals/roles';
 import { aggregateIpcLineTotals, buildIpcLinesCsv, type ReportIpcLine } from '@/lib/reports';
 import { Button } from '@/components/ui/button';
+import { CommentsPanel } from '@/components/comments-panel';
 
 type IpcPeriod = { id: string; project_id: string; supplier_id: string; ipc_number: string | null; period_start: string; period_end: string; status: string | null; subtotal: number | null; tax_total: number | null; total: number | null };
 
@@ -67,6 +68,7 @@ export default function ReportsPage() {
       {!hasReportAccess && role !== null && <p className='text-sm text-amber-700'>Finance/admin access required for print/export controls.</p>}
     </section>
     {period && <>
+      <CommentsPanel entityType='ipc_period' entityId={period.id} />
       <section className='rounded border p-4'>
         <h2 className='font-medium'>IPC Period Summary</h2>
         <dl className='mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2'>
