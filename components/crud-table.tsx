@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { supabase } from '@/lib/supabase/client';
 import { getCurrentMembership } from '@/lib/membership';
 import { buildCreatePayload } from '@/lib/crud';
+import { createActivityEvent } from '@/lib/activity';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -77,12 +78,24 @@ export function CrudTable<T extends z.ZodTypeAny>({ table, schema, fields, title
       setIsSubmitting(false);
       return;
     }
-    const { error } = await supabase.from(table).insert(payload);
+    const { data: inserted, error } = await supabase.from(table).insert(payload).select('id').single();
     if (error) {
       setErrorMessage(error.message);
       setIsSubmitting(false);
       return;
     }
+
+    if (organizationId && inserted?.id && ['projects', 'suppliers', 'plants'].includes(table)) {
+      const eventType = table === 'projects' ? 'project_created' : table === 'suppliers' ? 'supplier_created' : 'plant_created';
+      await createActivityEvent({
+        organizationId,
+        eventType,
+        entityType: table.slice(0, -1),
+        entityId: inserted.id,
+        message: `${table.slice(0, -1)} created`
+      });
+    }
+
     reset();
     setSuccessMessage('Record created.');
     await load(organizationId);

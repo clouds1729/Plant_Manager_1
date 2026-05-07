@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase/client';
 import { buildIpcPreview, PlantLogForIpc } from '@/lib/calculations/ipc';
 import { buildFinalizeIpcPayload } from '@/lib/calculations/ipcFinalize';
 import { PlantRate } from '@/lib/calculations/rates';
+import { getCurrentMembership } from '@/lib/membership';
+import { createActivityEvent } from '@/lib/activity';
 
 type Option = {
   id: string;
@@ -32,9 +34,13 @@ export default function IpcPreviewPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadOptions = async () => {
+      const membership = await getCurrentMembership();
+      setOrganizationId(membership?.organization_id ?? null);
+
       const [suppliersRes, projectsRes, plantsRes] = await Promise.all([
         supabase.from('suppliers').select('id,name').order('name'),
         supabase.from('projects').select('id,name').order('name'),
@@ -117,8 +123,19 @@ export default function IpcPreviewPage() {
         lines: result.lines
       });
 
-      const { error } = await supabase.rpc('finalize_ipc_period', payload);
+      const { data, error } = await supabase.rpc('finalize_ipc_period', payload);
       if (error) throw error;
+
+      const finalizedPeriodId = Array.isArray(data) ? data[0]?.id ?? null : null;
+      if (organizationId) {
+        await createActivityEvent({
+          organizationId,
+          eventType: 'ipc_finalized',
+          entityType: 'ipc_period',
+          entityId: finalizedPeriodId,
+          message: 'IPC finalized'
+        });
+      }
 
       await runPreview();
     } catch (e: any) {
