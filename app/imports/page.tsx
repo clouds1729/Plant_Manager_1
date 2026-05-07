@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,14 @@ import { isImportCommitSummary } from '@/lib/imports/commit';
 import { getCurrentMembership } from '@/lib/membership';
 
 type StagedRow = ImportReviewRow & { id: string };
+type ProjectOption = { id: string; name: string | null };
 
 export default function ImportsPage() {
   const [organizationId, setOrganizationId] = useState('');
   const [projectId, setProjectId] = useState('');
-  const [projects, setProjects] = useState<Array<{id:string;name:string|null}>>([]);
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [isProjectsLoading, setIsProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState('');
   const [importId, setImportId] = useState<string | null>(null);
   const [fileName, setFileName] = useState('');
   const [rows, setRows] = useState<StagedRow[]>([]);
@@ -23,11 +26,44 @@ export default function ImportsPage() {
   const [isParsing, setIsParsing] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
 
-  const ensureOrganizationId = async () => {
-    if (projects.length === 0) {
-      const { data } = await supabase.from('projects').select('id,name').order('name');
-      setProjects((data ?? []) as Array<{id:string;name:string|null}>);
+  const loadProjects = async (orgId: string) => {
+    setIsProjectsLoading(true);
+    setProjectsError('');
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id,name')
+      .eq('organization_id', orgId)
+      .order('name');
+
+    if (error) {
+      setProjects([]);
+      setProjectsError(`Failed to load projects: ${error.message}`);
+    } else {
+      setProjects((data ?? []) as ProjectOption[]);
     }
+    setIsProjectsLoading(false);
+  };
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      const membership = await getCurrentMembership();
+      const nextOrgId = membership?.organization_id ?? '';
+      setOrganizationId(nextOrgId);
+
+      if (!nextOrgId) {
+        setProjects([]);
+        setProjectsError('No active organization membership found.');
+        setIsProjectsLoading(false);
+        return;
+      }
+
+      await loadProjects(nextOrgId);
+    };
+
+    void bootstrap();
+  }, []);
+
+  const ensureOrganizationId = async () => {
     if (organizationId) return organizationId;
     const membership = await getCurrentMembership();
     const next = membership?.organization_id ?? '';
@@ -127,7 +163,10 @@ export default function ImportsPage() {
   return <section className='space-y-4'>
     <h1 className='text-xl font-semibold'>Excel Imports</h1>
     <Input placeholder='Organization UUID (auto from membership)' value={organizationId} readOnly />
-    <label className='text-sm'>Project<select className='mt-1 w-full rounded border p-2' value={projectId} onChange={(e) => setProjectId(e.target.value)}><option value=''>Select project</option>{projects.map((p)=><option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select></label>
+    <label className='text-sm'>Project<select className='mt-1 w-full rounded border p-2' value={projectId} onChange={(e) => setProjectId(e.target.value)} disabled={isProjectsLoading || projects.length === 0}><option value=''>Select project</option>{projects.map((p)=><option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select></label>
+    {isProjectsLoading ? <p className='text-sm text-slate-600'>Loading projects...</p> : null}
+    {!isProjectsLoading && !projectsError && projects.length === 0 ? <p className='text-sm text-slate-600'>No projects found. Create a project first.</p> : null}
+    {projectsError ? <p role='alert' className='text-sm text-red-600'>{projectsError}</p> : null}
     <Input type='file' accept='.xlsx,.xls,.csv' onChange={(e) => parseFile(e.target.files?.[0])} />
     {fileName ? <p className='text-sm text-slate-600'>Loaded: {fileName} {importId ? `(import: ${importId})` : ''}</p> : null}
     {errorMessage ? <p className='text-sm text-red-600'>{errorMessage}</p> : null}
