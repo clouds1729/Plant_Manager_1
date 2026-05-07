@@ -32,6 +32,14 @@ describe('import matching and conflicts', () => {
     expect(rows[1].plant_match_id).toBeNull();
   });
 
+  it('matches plant using plant_id when registration_number is missing', () => {
+    const [row] = buildImportReviewRows([
+      { plant_id: 'p1', date: '2026-05-06' }
+    ], plants, logs);
+    expect(row.plant_match_id).toBe('p1');
+    expect(row.validation_status).not.toBe('invalid');
+  });
+
 
 
   it('stages parsed_data with gross_hours and billable_hours', () => {

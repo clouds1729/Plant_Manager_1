@@ -21,6 +21,7 @@ export function matchPlantId(plants: Array<{ id: string; registration_number: st
 }
 
 export function buildImportReviewRows(rawRows: Record<string, unknown>[], plants: Array<{ id: string; registration_number: string }>, existingLogs: Array<{ id: string; plant_id: string; date: string }>): ImportReviewRow[] {
+  const plantsById = new Map(plants.map((plant) => [plant.id, plant]));
   return rawRows.map((raw) => {
     const parsed = normalizeImportRow(raw);
     const gross = calculateGrossHours(parsed.start_time, parsed.end_time, parsed.lunch_hours);
@@ -29,9 +30,10 @@ export function buildImportReviewRows(rawRows: Record<string, unknown>[], plants
 
     const warnings: string[] = [];
     if (!parsed.date) warnings.push('Missing/invalid date');
-    if (!parsed.registration_number) warnings.push('Missing registration number');
+    if (!parsed.registration_number && !raw.plant_id) warnings.push('Missing registration number or plant_id');
 
-    const plantId = parsed.registration_number ? matchPlantId(plants, parsed.registration_number) : null;
+    const plantFromId = typeof raw.plant_id === 'string' && plantsById.has(raw.plant_id) ? raw.plant_id : null;
+    const plantId = plantFromId ?? (parsed.registration_number ? matchPlantId(plants, parsed.registration_number) : null);
     if (!plantId) warnings.push('No matching plant');
 
     const hasConflict = !!(plantId && parsed.date && existingLogs.some((l) => l.plant_id === plantId && l.date === parsed.date));
