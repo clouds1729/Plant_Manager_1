@@ -16,7 +16,11 @@ export default function LogsPage() {
   const [rows, setRows] = useState<any[]>([]);
   const [role, setRole] = useState<OrgRole | null>(null);
   const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [plants, setPlants] = useState<any[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, handleSubmit, reset } = useForm({
     resolver: zodResolver(plantLogSchema as any),
     defaultValues: { lunch_hours: 0, unproductive_hours: 0, breakdown_hours: 0 }
@@ -33,6 +37,8 @@ export default function LogsPage() {
 
   useEffect(() => {
     load();
+    supabase.from('plants').select('id,registration_number,type').then(({data})=>setPlants(data ?? []));
+    supabase.from('projects').select('id,name').then(({data})=>setProjects(data ?? []));
     const loadRole = async () => {
       const membership = await getCurrentMembership();
       setOrganizationId(membership?.organization_id ?? null);
@@ -57,8 +63,11 @@ export default function LogsPage() {
 
   const onSubmit = async (v: any) => {
     setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsSubmitting(true);
     if (!organizationId) {
       setErrorMessage('No active organization membership found.');
+      setIsSubmitting(false);
       return;
     }
 
@@ -66,10 +75,13 @@ export default function LogsPage() {
     const { error } = await supabase.from('plant_logs').insert(payload);
     if (error) {
       setErrorMessage(error.message);
+      setIsSubmitting(false);
       return;
     }
     reset();
+    setSuccessMessage('Daily log created.');
     await load();
+    setIsSubmitting(false);
   };
 
   return (
@@ -78,12 +90,12 @@ export default function LogsPage() {
 
       <form className='grid grid-cols-2 gap-2' onSubmit={handleSubmit(onSubmit)}>
         <label className='space-y-1 text-sm'>
-          <span>Plant UUID</span>
-          <Input placeholder='Plant UUID' {...register('plant_id')} />
+          <span>Plant</span>
+          <select className='w-full rounded border p-2' {...register('plant_id')}><option value=''>Select plant</option>{plants.map((p)=><option key={p.id} value={p.id}>{p.registration_number} ({p.type ?? 'plant'})</option>)}</select>
         </label>
         <label className='space-y-1 text-sm'>
-          <span>Project UUID</span>
-          <Input placeholder='Project UUID' {...register('project_id')} />
+          <span>Project</span>
+          <select className='w-full rounded border p-2' {...register('project_id')}><option value=''>Select project</option>{projects.map((p)=><option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select>
         </label>
         <label className='space-y-1 text-sm'>
           <span>Date</span>
@@ -113,9 +125,10 @@ export default function LogsPage() {
           <span>Remarks</span>
           <Input placeholder='Remarks' {...register('remarks')} />
         </label>
-        <Button type='submit'>Create</Button>
+        <Button type='submit' disabled={isSubmitting}>{isSubmitting ? 'Creating...' : 'Create'}</Button>
       </form>
       {errorMessage && <p role='alert' className='text-sm text-red-600'>{errorMessage}</p>}
+      {successMessage && <p className='text-sm text-emerald-700'>{successMessage}</p>}
 
       <div>
         {rows.map((row) => {

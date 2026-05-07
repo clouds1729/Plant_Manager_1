@@ -58,11 +58,11 @@ export default function IpcPeriodsPage() {
         schema={ipcPeriodSchema}
         title='IPC Periods'
         fields={[
-          { name: 'project_id', label: 'Project UUID' },
-          { name: 'supplier_id', label: 'Supplier UUID' },
-          { name: 'period_start', label: 'Period Start' },
-          { name: 'period_end', label: 'Period End' },
-          { name: 'status', label: 'Status' }
+          { name: 'project_id', label: 'Project', type:'select', optionsTable:'projects', optionLabel:(row)=>row.name ?? row.id },
+          { name: 'supplier_id', label: 'Supplier', type:'select', optionsTable:'suppliers', optionLabel:(row)=>row.name ?? row.id },
+          { name: 'period_start', label: 'Period Start', type:'date' },
+          { name: 'period_end', label: 'Period End', type:'date' },
+          { name: 'status', label: 'Status', type:'select', options:[{value:'draft',label:'draft'},{value:'finalized',label:'finalized'}] }
         ]}
       />
 
