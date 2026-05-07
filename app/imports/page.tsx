@@ -14,6 +14,7 @@ type StagedRow = ImportReviewRow & { id: string };
 export default function ImportsPage() {
   const [organizationId, setOrganizationId] = useState('');
   const [projectId, setProjectId] = useState('');
+  const [projects, setProjects] = useState<Array<{id:string;name:string|null}>>([]);
   const [importId, setImportId] = useState<string | null>(null);
   const [fileName, setFileName] = useState('');
   const [rows, setRows] = useState<StagedRow[]>([]);
@@ -23,6 +24,10 @@ export default function ImportsPage() {
   const [isCommitting, setIsCommitting] = useState(false);
 
   const ensureOrganizationId = async () => {
+    if (projects.length === 0) {
+      const { data } = await supabase.from('projects').select('id,name').order('name');
+      setProjects((data ?? []) as Array<{id:string;name:string|null}>);
+    }
     if (organizationId) return organizationId;
     const membership = await getCurrentMembership();
     const next = membership?.organization_id ?? '';
@@ -81,6 +86,7 @@ export default function ImportsPage() {
       setImportId(createdImport.id);
       setRows((stagedRows ?? []).map((row) => ({ ...row, validation_warnings: [] })) as StagedRow[]);
       setSuccessMessage(`Staged ${stagedRows?.length ?? 0} rows from ${file.name}.`);
+      if (stagedRows && stagedRows.length === 0) setErrorMessage('No valid rows found to stage.');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to parse and stage import file.';
       setErrorMessage(message);
@@ -121,7 +127,7 @@ export default function ImportsPage() {
   return <section className='space-y-4'>
     <h1 className='text-xl font-semibold'>Excel Imports</h1>
     <Input placeholder='Organization UUID (auto from membership)' value={organizationId} readOnly />
-    <Input placeholder='Project UUID' value={projectId} onChange={(e) => setProjectId(e.target.value)} />
+    <label className='text-sm'>Project<select className='mt-1 w-full rounded border p-2' value={projectId} onChange={(e) => setProjectId(e.target.value)}><option value=''>Select project</option>{projects.map((p)=><option key={p.id} value={p.id}>{p.name ?? p.id}</option>)}</select></label>
     <Input type='file' accept='.xlsx,.xls,.csv' onChange={(e) => parseFile(e.target.files?.[0])} />
     {fileName ? <p className='text-sm text-slate-600'>Loaded: {fileName} {importId ? `(import: ${importId})` : ''}</p> : null}
     {errorMessage ? <p className='text-sm text-red-600'>{errorMessage}</p> : null}

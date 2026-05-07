@@ -6,7 +6,6 @@ import { getCurrentMembership } from '@/lib/membership';
 import type { OrgRole } from '@/lib/approvals/roles';
 import { aggregateIpcLineTotals, buildIpcLinesCsv, type ReportIpcLine } from '@/lib/reports';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 type IpcPeriod = { id: string; project_id: string; supplier_id: string; ipc_number: string | null; period_start: string; period_end: string; status: string | null; subtotal: number | null; tax_total: number | null; total: number | null };
 
@@ -14,6 +13,7 @@ const REPORT_ACCESS_ROLES: OrgRole[] = ['owner', 'admin', 'finance'];
 
 export default function ReportsPage() {
   const [periodId, setPeriodId] = useState('');
+  const [periodOptions, setPeriodOptions] = useState<Array<{id:string;period_start:string;period_end:string}>>([]);
   const [role, setRole] = useState<OrgRole | null>(null);
   const [period, setPeriod] = useState<IpcPeriod | null>(null);
   const [lines, setLines] = useState<ReportIpcLine[]>([]);
@@ -22,6 +22,8 @@ export default function ReportsPage() {
   const loadReport = async () => {
     setMessage(null);
     const membership = await getCurrentMembership();
+    const { data: options } = await supabase.from('ipc_periods').select('id,period_start,period_end').order('created_at', { ascending: false }).limit(50);
+    setPeriodOptions((options ?? []) as Array<{id:string;period_start:string;period_end:string}>);
     setRole(membership?.role ?? null);
     if (!membership) return void setMessage('No organization membership found.');
 
@@ -59,8 +61,8 @@ export default function ReportsPage() {
   return <main className='space-y-6'>
     <header><h1 className='text-2xl font-semibold'>Reports</h1><p className='text-sm text-slate-600'>Internal finance/admin report and export foundation for IPC data.</p></header>
     <section className='space-y-3 rounded border p-4'>
-      <label className='text-sm font-medium' htmlFor='period-id'>IPC Period ID</label>
-      <div className='flex max-w-2xl gap-2'><Input id='period-id' value={periodId} onChange={(e) => setPeriodId(e.target.value)} placeholder='Enter IPC period UUID' /><Button type='button' onClick={loadReport}>Load</Button></div>
+      <label className='text-sm font-medium' htmlFor='period-id'>IPC Period</label>
+      <div className='flex max-w-2xl gap-2'><select id='period-id' className='w-full rounded border p-2' value={periodId} onChange={(e)=>setPeriodId(e.target.value)}><option value=''>Select IPC period</option>{periodOptions.map((o)=><option key={o.id} value={o.id}>{o.period_start} to {o.period_end}</option>)}</select><Button type='button' onClick={loadReport}>Load</Button></div>
       {message && <p className='text-sm text-slate-600'>{message}</p>}
       {!hasReportAccess && role !== null && <p className='text-sm text-amber-700'>Finance/admin access required for print/export controls.</p>}
     </section>
